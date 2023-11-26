@@ -1,12 +1,16 @@
 // UploadExcelComponent.tsx
-import React from 'react';
- // Import the Firestore instance 'db' from your Firebase config file
+import React, { useRef } from 'react';
 import * as XLSX from 'xlsx';
-import { initializeApp } from "firebase/app";
-import { addDoc, collection, getFirestore } from "firebase/firestore";
+import { db } from '../../firebase';
+import { Button, Typography, Box } from '@mui/material'
+import { addDoc, collection } from 'firebase/firestore';
 
+interface ExcelRow {
+  [key: string]: string | number; // Define the type for each key in the row
+}
 
 const UploadExcelComponent: React.FC = () => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -17,13 +21,40 @@ const UploadExcelComponent: React.FC = () => {
       const workbook = XLSX.read(data, { type: 'array' });
       const sheetName = workbook.SheetNames[0];
       const sheet = workbook.Sheets[sheetName];
-      const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+      const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 }) as string[][];
+
+      console.log(jsonData);
+
+      if (jsonData.length < 2) {
+        // Ensure there are at least two rows (headers and data) before processing
+        console.error('Not enough data rows in the Excel sheet');
+        return;
+      }
+
+      const [headers, ...rows] = jsonData;
+
+      const flattenedData: ExcelRow[] = rows.map((row) => {
+        const obj: ExcelRow = {};
+        for (let i = 0; i < headers.length; i++) {
+          obj[headers[i]] = row[i];
+        }
+        return obj;
+      });
 
       try {
-        // Get a reference to a Firestore collection and set document data
-        const docRef = await addDoc(collection(db, "excelData"), {
-          data: jsonData,    
+        const batch: Promise<void>[] = flattenedData.map((dataItem) => {
+          // Filter out undefined or null values from dataItem
+          const cleanedDataItem: { [key: string]: any } = {};
+          Object.entries(dataItem).forEach(([key, value]) => {
+            if (value !== undefined && value !== null) {
+              cleanedDataItem[key] = value;
+            }
+          });
+  
+          return addDoc(collection(db, 'excelData'), cleanedDataItem).then(() => {});
         });
+  
+        await Promise.all(batch);
         alert('File uploaded successfully!');
       } catch (error) {
         console.error('Error uploading file:', error);
@@ -32,19 +63,38 @@ const UploadExcelComponent: React.FC = () => {
     reader.readAsArrayBuffer(file);
   };
 
+  const handleButtonClick = () => {
+    // Trigger file input click programmatically
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
   return (
-    <div style={{ padding: '20px', border: '1px solid #ccc', borderRadius: '5px', maxWidth: '300px' }}>
-      <h2>Upload Excel File</h2>
+    <Box sx={{ padding: '20px', border: '1px solid #ccc', borderRadius: '5px', maxWidth: '300px' }}>
+      <Typography variant="h5" gutterBottom>
+        Upload Excel File
+      </Typography>
       <input
         type="file"
+        ref={fileInputRef}
         onChange={handleFileUpload}
-        style={{ marginBottom: '10px' }}
+        style={{ display: 'none' }}
         accept=".xlsx, .xls"
       />
-      <p>Select an Excel file (.xlsx or .xls) to upload.</p>
-      <p>Supported file formats: .xlsx, .xls</p>
-    </div>
+      <Button variant="contained" onClick={handleButtonClick} sx={{ marginBottom: '10px' }}>
+        Select File
+      </Button>
+      <Button variant="contained" onClick={handleFileUpload} sx={{ marginBottom: '10px', marginLeft: '10px' }}>
+        Upload
+      </Button>
+      <Typography variant="body1" gutterBottom>
+        Select an Excel file (.xlsx or .xls) to upload.
+      </Typography>
+      <Typography variant="body2">Supported file formats: .xlsx, .xls</Typography>
+    </Box>
   );
 };
 
 export default UploadExcelComponent;
+

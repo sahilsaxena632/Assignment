@@ -5,8 +5,9 @@ import DisplayDataComponent from '../src/components/DisplayDataComponent';
 const App: React.FC = () => {
   return (
     <div>
-      <center><h1>Excel Data Upload and Display</h1></center>
+      <h1>Excel Data Upload and Display</h1>
       <UploadExcelComponent/>
+      <DisplayDataComponent/>
     
     </div>
   );
