@@ -1,4 +1,3 @@
-// DisplayDataComponent.tsx
 import React, { useState, useEffect } from 'react';
 import { db } from '../../firebase';
 import { collection, query, getDocs } from 'firebase/firestore';
@@ -10,7 +9,6 @@ interface DataItem {
   lastname : string;
   gender: string;
   email: string;
-  // Add other fields as needed from your Firestore document
 }
 
 const DisplayDataComponent: React.FC = () => {
@@ -31,8 +29,6 @@ const DisplayDataComponent: React.FC = () => {
             lastname: doc.data().last_name,
             gender: doc.data().gender,
             email: doc.data().email,
-             // Replace 'name' with the field you want to display
-            // Add other fields here based on your Firestore document structure
           };
           fetchedData.push(dataItem);
         });

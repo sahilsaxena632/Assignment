@@ -1,4 +1,3 @@
-// UploadExcelComponent.tsx
 import React, { useRef } from 'react';
 import * as XLSX from 'xlsx';
 import { db } from '../../firebase';
@@ -6,7 +5,7 @@ import { Button, Typography, Box } from '@mui/material'
 import { addDoc, collection } from 'firebase/firestore';
 
 interface ExcelRow {
-  [key: string]: string | number; // Define the type for each key in the row
+  [key: string]: string | number;
 }
 
 const UploadExcelComponent: React.FC = () => {
@@ -26,7 +25,6 @@ const UploadExcelComponent: React.FC = () => {
       console.log(jsonData);
 
       if (jsonData.length < 2) {
-        // Ensure there are at least two rows (headers and data) before processing
         console.error('Not enough data rows in the Excel sheet');
         return;
       }
@@ -43,7 +41,7 @@ const UploadExcelComponent: React.FC = () => {
 
       try {
         const batch: Promise<void>[] = flattenedData.map((dataItem) => {
-          // Filter out undefined or null values from dataItem
+          // Filtered out undefined or null values from dataItem
           const cleanedDataItem: { [key: string]: any } = {};
           Object.entries(dataItem).forEach(([key, value]) => {
             if (value !== undefined && value !== null) {
@@ -64,7 +62,6 @@ const UploadExcelComponent: React.FC = () => {
   };
 
   const handleButtonClick = () => {
-    // Trigger file input click programmatically
     if (fileInputRef.current) {
       fileInputRef.current.click();
     }
