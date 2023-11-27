@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import * as XLSX from 'xlsx';
 import { db } from '../../firebase';
 import { Button, Typography, Box } from '@mui/material'
@@ -10,9 +10,19 @@ interface ExcelRow {
 
 const UploadExcelComponent: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+  const handleFileSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (file) {
+      setSelectedFile(file);
+    }
+  };
+
+  const handleFileUpload = async () => {
+    if (!selectedFile) {
+      return;
+    }
 
     const reader = new FileReader();
     reader.onload = async (e) => {
@@ -41,8 +51,7 @@ const UploadExcelComponent: React.FC = () => {
 
       try {
         const batch: Promise<void>[] = flattenedData.map((dataItem) => {
-          // Filtered out undefined or null values from dataItem
-          const cleanedDataItem: { [key: string]: any } = {};
+          const cleanedDataItem: { [key: string]: unknown } = {};
           Object.entries(dataItem).forEach(([key, value]) => {
             if (value !== undefined && value !== null) {
               cleanedDataItem[key] = value;
@@ -58,7 +67,9 @@ const UploadExcelComponent: React.FC = () => {
         console.error('Error uploading file:', error);
       }
     };
-    reader.readAsArrayBuffer(file);
+
+    reader.readAsArrayBuffer(selectedFile);
+    setSelectedFile(null); 
   };
 
   const handleButtonClick = () => {
@@ -75,14 +86,14 @@ const UploadExcelComponent: React.FC = () => {
       <input
         type="file"
         ref={fileInputRef}
-        onChange={handleFileUpload}
+        onChange={handleFileSelection}
         style={{ display: 'none' }}
         accept=".xlsx, .xls"
       />
       <Button variant="contained" onClick={handleButtonClick} sx={{ marginBottom: '10px' }}>
         Select File
       </Button>
-      <Button variant="contained" onClick={handleFileUpload} sx={{ marginBottom: '10px', marginLeft: '10px' }}>
+      <Button variant="contained" onClick={handleFileUpload} disabled={!selectedFile} sx={{ marginBottom: '10px', marginLeft: '10px' }}>
         Upload
       </Button>
       <Typography variant="body1" gutterBottom>

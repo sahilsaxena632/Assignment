@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Box, Container, Typography } from '@mui/material';
 import UploadExcelComponent from '../src/components/UploadExcelComponent';
 import DisplayDataComponent from '../src/components/DisplayDataComponent';
+import Navbar from '../src/components/Navbar';
 
 const App: React.FC = () => {
+  const [activeComponent, setActiveComponent] = useState('Upload');
+
   return (
     <Container maxWidth="md">
       <Box mt={4} mb={2}>
@@ -12,20 +15,25 @@ const App: React.FC = () => {
         </Typography>
       </Box>
 
-      <Box display="flex" justifyContent="space-between">
-        <Box width="50%"> {/* Adjust the width as needed */}
-          <Typography variant="h4" component="h2" gutterBottom>
-            Upload Excel File
-          </Typography>
-          <UploadExcelComponent />
-        </Box>
+      <Navbar setActiveComponent={setActiveComponent} />
 
-        <Box  width="100%" height={300}> 
-          <Typography variant="h4" align="right" component="h2" gutterBottom>
-            Display Data
-          </Typography>
-          <DisplayDataComponent />
-        </Box>
+      <Box mt={2}>
+        {activeComponent === 'Upload' && (
+          <Box>
+            <Typography variant="h4" align='center' component="h2" gutterBottom>
+              Upload Excel File
+            </Typography>
+            <UploadExcelComponent />
+          </Box>
+        )}
+        {activeComponent === 'Display' && (
+          <Box>
+            <Typography variant="h4" align="center" component="h2" gutterBottom>
+              Display Data
+            </Typography>
+            <DisplayDataComponent />
+          </Box>
+        )}
       </Box>
     </Container>
   );
